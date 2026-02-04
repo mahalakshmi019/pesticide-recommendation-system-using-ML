@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - PlantGuard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/user.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .history-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .history-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+        
+        .history-content {
+            padding: 1.5rem;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        
+        .history-plant {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status-healthy {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-critical {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .history-details {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--text-muted, #666);
+        }
+        
+        .detail-value {
+            color: var(--text-color);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state p {
+            color: #999;
+            margin-bottom: 1.5rem;
+        }
+        
+        .empty-state a {
+            display: inline-block;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .section-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/predict" class="navbar-title"><i class="fas fa-leaf"></i> PlantGuard</a>
+            <ul>
+                <li><a href="/predict"><i class="fas fa-camera"></i> Detect</a></li>
+                <li><a href="/history"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="/alerts"><i class="fas fa-bell"></i> Alerts</a></li>
+                <li><a href="/complaint"><i class="fas fa-comment"></i> Support</a></li>
+                <li><a href="/logout" style="color: var(--error-color);"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main class="container">
+        <div class="section-header">
+            <i class="fas fa-history"></i>
+            <h1>Detection History</h1>
+        </div>
+        
+        {% if history %}
+            <div class="history-grid">
+                {% for item in history %}
+                <div class="history-item">
+                    {% if item.image_path %}
+                        <img src="{{ url_for('static', filename=item.image_path) }}" alt="{{ item.plant_type }}" class="history-image">
+                    {% else %}
+                        <div class="history-image" style="display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
+                            <i class="fas fa-image" style="font-size: 2rem; color: #ccc;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="history-content">
+                        <div class="history-header">
+                            <div class="history-plant">{{ item.plant_type|default('Unknown Plant')|title }}</div>
+                            <span class="status-badge status-{{ item.status.lower().replace('-', '') }}">
+                                {{ item.status }}
+                            </span>
+                        </div>
+                        
+                        <div class="history-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Disease:</span>
+                                <span class="detail-value">{{ item.disease_name }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Severity:</span>
+                                <span class="detail-value">{{ "%.1f"|format(item.severity_score) }}%</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Date:</span>
+                                <span class="detail-value">
+                                    {% if item.created_at %}
+                                        {{ item.created_at.strftime('%b %d, %Y') if item.created_at.year else 'N/A' }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h2>No Detection History</h2>
+                <p>You haven't analyzed any plants yet. Start by uploading an image!</p>
+                <a href="/predict" class="button button-primary"><i class="fas fa-camera"></i> Analyze a Plant</a>
+            </div>
+        {% endif %}
+    </main>
+</body>
+</html>

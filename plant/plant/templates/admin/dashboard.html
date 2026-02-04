@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - PlantGuard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted, #666);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            color: var(--success-color);
+            margin-top: 0.5rem;
+        }
+
+        .recent-activity {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .activity-header {
+            padding: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .activity-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .activity-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .activity-table th {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-muted, #666);
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .activity-table tbody tr {
+            transition: background 0.3s ease;
+        }
+
+        .activity-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .activity-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-healthy {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-critical {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.view {
+            background: #e7f3ff;
+            color: #0066cc;
+        }
+
+        .action-btn.view:hover {
+            background: #0066cc;
+            color: white;
+        }
+
+        .action-btn.delete {
+            background: #ffe7e7;
+            color: #cc0000;
+        }
+
+        .action-btn.delete:hover {
+            background: #cc0000;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted, #666);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .activity-table {
+                font-size: 0.9rem;
+            }
+
+            .activity-table th,
+            .activity-table td {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/admin/dashboard" class="navbar-title"><i class="fas fa-shield-alt"></i> Admin Panel</a>
+            <ul>
+                <li><a href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="/admin/history"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="/admin/alerts"><i class="fas fa-bell"></i> Alerts</a></li>
+                <li><a href="/logout" style="color: var(--error-color);"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div style="margin-bottom: 2rem;">
+            <h1 style="color: var(--primary-color); font-size: 2rem; margin-bottom: 0.5rem;">
+                <i class="fas fa-chart-line"></i> Dashboard Overview
+            </h1>
+            <p style="color: var(--text-muted, #666); margin: 0;">Monitor system statistics and recent activities</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value">{{ user_count }}</div>
+                <div class="stat-change"><i class="fas fa-arrow-up"></i> Active</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                <div class="stat-label">Total Reports</div>
+                <div class="stat-value">{{ report_count }}</div>
+                <div class="stat-change"><i class="fas fa-arrow-right"></i> This month</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="stat-label">Active Alerts</div>
+                <div class="stat-value">{{ alert_count }}</div>
+                <div class="stat-change"><i class="fas fa-bell"></i> Critical cases</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-label">System Status</div>
+                <div class="stat-value" style="color: var(--success-color);">Online</div>
+                <div class="stat-change"><i class="fas fa-wifi"></i> Connected</div>
+            </div>
+        </div>
+
+        <!-- NEW CODE: Critical Disease Trigger Visual -->
+        {% if critical_cases %}
+        <div
+            style="background: #fff5f5; border-left: 5px solid #c53030; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h3 style="color: #c53030; margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-biohazard"></i> CRITICAL DISEASE ALERTS
+            </h3>
+            <div style="display: grid; gap: 1rem;">
+                {% for case in critical_cases %}
+                <div
+                    style="background: white; padding: 1rem; border-radius: 6px; border: 1px solid #fc8181; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: #c53030; font-size: 1.1rem;">{{ case.disease_name }}</strong>
+                        <div style="color: #4a5568; font-size: 0.9rem;">
+                            Detected in <strong>{{ case.plant_type }}</strong> • user: {{ case.fullname }} ({{
+                            case.email }})
+                        </div>
+                    </div>
+                    <span
+                        style="background: #c53030; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">
+                        {{ case.severity_score }}% Severity
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="recent-activity">
+            <div class="activity-header">
+                <h2><i class="fas fa-clock"></i> Recent Activity</h2>
+            </div>
+
+            {% if activities %}
+            <table class="activity-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;"><i class="fas fa-image"></i> Image</th>
+                        <th><i class="fas fa-user"></i> User</th>
+                        <th><i class="fas fa-leaf"></i> Plant Type</th>
+                        <th><i class="fas fa-stethoscope"></i> Status</th>
+                        <th><i class="fas fa-calendar-alt"></i> Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for act in activities %}
+                    <tr>
+                        <td>
+                            {% if act.image_path %}
+                            <img src="{{ act.image_path }}" alt="Plant"
+                                style="width: 60px; height: 60px; border-radius: 6px; object-fit: cover; cursor: pointer;"
+                                onclick="showImagePreview('{{ act.image_path }}', '{{ act.fullname|default('User') }}')">
+                            {% else %}
+                            <div
+                                style="width: 60px; height: 60px; background: #e2e8f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #a0aec0;">
+                                <i class="fas fa-image"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ act.fullname|default('Unknown') }}</strong><br><small style="color: #718096;">{{
+                                act.email|default('') }}</small></td>
+                        <td><strong>{{ act.plant_type|default('Unknown')|title }}</strong></td>
+                        <td>
+                            <span class="status-badge status-{{ act.status.lower().replace('-', '') }}">
+                                {{ act.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if act.created_at %}
+                            {{ act.created_at.strftime('%b %d, %Y %H:%M') if act.created_at.year else 'N/A' }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox" style="font-size: 2rem; color: #ddd;"></i>
+                <p style="margin-top: 1rem;">No recent activities</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Image Preview Modal -->
+        <div id="imageModal"
+            style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
+            <div
+                style="background: white; padding: 1.5rem; border-radius: 12px; max-width: 600px; max-height: 80vh; overflow: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 id="modalTitle" style="margin: 0; color: var(--primary-color);">Image Preview</h3>
+                    <button onclick="closeImagePreview()"
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <img id="modalImage" src="" alt="Preview"
+                    style="width: 100%; border-radius: 8px; max-height: 500px; object-fit: contain;">
+            </div>
+        </div>
+
+        <div
+            style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #f5f7fa, #c3cfe2); border-radius: 12px; text-align: center;">
+            <h3 style="color: var(--primary-color); margin-bottom: 1rem;">Quick Actions</h3>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="/admin/alerts" class="button button-primary"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-bell"></i> Manage Alerts
+                </a>
+                <a href="/admin/history" class="button button-primary"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-history"></i> View All Reports
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function showImagePreview(imagePath, userName) {
+            document.getElementById('modalImage').src = imagePath;
+            document.getElementById('modalTitle').textContent = `Image from ${userName}`;
+            document.getElementById('imageModal').style.display = 'flex';
+        }
+
+        function closeImagePreview() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('imageModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeImagePreview();
+            }
+        });
+    </script>
+</body>
+
+</html>

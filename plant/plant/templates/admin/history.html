@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detection History - PlantGuard Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .history-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .table-controls {
+            padding: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(24, 90, 157, 0.1);
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .filter-btn {
+            padding: 0.6rem 1rem;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: rgba(24, 90, 157, 0.05);
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+        }
+        
+        .history-table th {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .history-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+        
+        .history-table tbody tr {
+            transition: background 0.3s ease;
+        }
+        
+        .history-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .history-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .user-cell i {
+            color: var(--primary-color);
+        }
+        
+        .image-cell {
+            text-align: center;
+        }
+        
+        .image-cell img {
+            max-width: 60px;
+            max-height: 60px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .image-cell img:hover {
+            transform: scale(1.05);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-healthy {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-critical {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn.alert {
+            background: #ffe7e7;
+            color: #cc0000;
+        }
+        
+        .action-btn.alert:hover {
+            background: #cc0000;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted, #666);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .pagination a, .pagination span {
+            padding: 0.5rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination a:hover, .pagination span.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/admin/dashboard" class="navbar-title"><i class="fas fa-shield-alt"></i> Admin Panel</a>
+            <ul>
+                <li><a href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="/admin/history"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="/admin/alerts"><i class="fas fa-bell"></i> Alerts</a></li>
+                <li><a href="/logout" style="color: var(--error-color);"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main class="container">
+        <div style="margin-bottom: 2rem;">
+            <h1 style="color: var(--primary-color); font-size: 2rem; margin-bottom: 0.5rem;">
+                <i class="fas fa-table"></i> Detection History
+            </h1>
+            <p style="color: var(--text-muted, #666); margin: 0;">View all user plant detection reports</p>
+        </div>
+        
+        <div class="history-table-container">
+            <div class="table-controls">
+                <div class="search-box">
+                    <input type="text" id="searchInput" onkeyup="filterTable()">
+                </div>
+                <div class="filter-controls">
+                    <button class="filter-btn active" onclick="filterByStatus('all')">All</button>
+                    <button class="filter-btn" onclick="filterByStatus('healthy')">Healthy</button>
+                    <button class="filter-btn" onclick="filterByStatus('critical')">Critical</button>
+                </div>
+            </div>
+            
+            {% if history %}
+                <table class="history-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> User</th>
+                            <th><i class="fas fa-image"></i> Image</th>
+                            <th><i class="fas fa-bug"></i> Diagnosis</th>
+                            <th><i class="fas fa-heartbeat"></i> Status</th>
+                            <th><i class="fas fa-percentage"></i> Severity</th>
+                            <th><i class="fas fa-calendar-alt"></i> Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in history %}
+                        <tr class="history-row" data-status="{{ item.status.lower() }}">
+                            <td>
+                                <div class="user-cell">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>{{ item.fullname|default('Unknown') }}</span>
+                                </div>
+                            </td>
+                            <td class="image-cell">
+                                {% if item.image_path %}
+                                    <img src="{{ url_for('static', filename=item.image_path) }}" alt="Plant" onclick="showImageModal('{{ url_for('static', filename=item.image_path) }}')">
+                                {% else %}
+                                    <i class="fas fa-image" style="color: #ccc; font-size: 2rem;"></i>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.disease_name }}</td>
+                            <td>
+                                <span class="status-badge status-{{ item.status.lower().replace('-', '') }}">
+                                    {{ item.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ "%.1f"|format(item.severity_score) }}%</strong>
+                            </td>
+                            <td>
+                                {% if item.created_at %}
+                                    {{ item.created_at.strftime('%b %d, %Y') if item.created_at.year else 'N/A' }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    {% if item.status == 'Critical' %}
+                                        <button class="action-btn alert" onclick="sendAlert('{{ item.disease_name }}')">
+                                            <i class="fas fa-bell"></i> Alert
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox" style="font-size: 2rem; color: #ddd;"></i>
+                    <p style="margin-top: 1rem;">No detection history available</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+    
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Image Preview</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <img id="modalImage" src="" alt="Plant" style="max-width: 100%; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('historyTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const text = rows[i].textContent.toLowerCase();
+                rows[i].style.display = text.includes(filter) ? '' : 'none';
+            }
+        }
+        
+        function filterByStatus(status) {
+            const rows = document.querySelectorAll('.history-row');
+            rows.forEach(row => {
+                if (status === 'all' || row.dataset.status === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update button state
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        function showImageModal(imageUrl) {
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('imageModal').classList.add('show');
+        }
+        
+        function closeModal() {
+            document.getElementById('imageModal').classList.remove('show');
+        }
+        
+        function sendAlert(disease) {
+            // Create alert form modal
+            const priority = prompt('Enter priority level (High/Medium/General):', 'High');
+            if (!priority) return;
+            
+            const region = prompt('Enter region/area:', '');
+            if (!region) return;
+            
+            const message = prompt('Enter alert message:', `Alert for ${disease} outbreak in the region.`);
+            if (!message) return;
+            
+            // Send alert to all users
+            fetch('/admin/send_alert', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    priority: priority,
+                    disease: disease,
+                    region: region,
+                    message: message
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Alert sent successfully to ' + data.message.split(' ')[2] + ' users!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to send alert');
+            });
+        }
+    </script>
+</body>
+</html>

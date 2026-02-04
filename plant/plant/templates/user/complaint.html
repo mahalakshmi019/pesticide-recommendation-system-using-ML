@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - PlantGuard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/user.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .support-container {
+            max-width: 600px;
+            margin: 2rem auto;
+        }
+        
+        .support-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .support-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .support-header p {
+            color: #666;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .info-box i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .info-box h3 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .contact-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .contact-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        
+        .contact-card i {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 0.8rem;
+        }
+        
+        .contact-card h4 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .contact-card p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .contact-card a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        
+        .contact-card a:hover {
+            color: var(--secondary-color);
+        }
+        
+        .form-title {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 1rem;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/predict" class="navbar-title"><i class="fas fa-leaf"></i> PlantGuard</a>
+            <ul>
+                <li><a href="/predict"><i class="fas fa-camera"></i> Detect</a></li>
+                <li><a href="/history"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="/alerts"><i class="fas fa-bell"></i> Alerts</a></li>
+                <li><a href="/complaint"><i class="fas fa-comment"></i> Support</a></li>
+                <li><a href="/logout" style="color: var(--error-color);"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main class="container">
+        <div class="support-container">
+            <div class="support-header">
+                <h1><i class="fas fa-headset"></i> Support & Feedback</h1>
+                <p>We're here to help! Get in touch with our support team</p>
+            </div>
+            
+            <div class="info-box">
+                <i class="fas fa-clock"></i>
+                <h3>24/7 Customer Support</h3>
+                <p>Our team is available round the clock to assist you</p>
+            </div>
+            
+            <div class="contact-info">
+                <div class="contact-card">
+                    <i class="fas fa-envelope"></i>
+                    <h4>Email</h4>
+                    <p>support@plantguard.com</p>
+                    <a href="mailto:support@plantguard.com">Send Email</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="form-title">
+                    <i class="fas fa-comment-dots"></i> Send us your feedback
+                </div>
+                
+                <div class="success-message" id="successMsg">
+                    <i class="fas fa-check-circle"></i> Thank you for your feedback! We'll get back to you soon.
+                </div>
+                
+                <form onsubmit="handleComplaint(event)">
+                    <div class="form-group">
+                        <label><i class="fas fa-list"></i> Issue Category</label>
+                        <select id="category" class="form-input" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="improvement">Improvement</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-heading"></i> Subject</label>
+                        <input type="text" id="subject" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-message"></i> Message</label>
+                        <textarea id="message" class="form-input" rows="6" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="button button-primary" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> Send Feedback
+                    </button>
+                </form>
+            </div>
+            
+            <div class="card" style="margin-top: 2rem; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
+                    <i class="fas fa-question-circle"></i> FAQ
+                </h3>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #333; margin-bottom: 0.5rem;">How accurate is the disease detection?</h4>
+                    <p style="color: #666; font-size: 0.95rem;">Our AI model is trained on thousands of plant images and has an accuracy rate of 92% for common plant diseases. However, we always recommend consulting with agricultural experts for critical decisions.</p>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #333; margin-bottom: 0.5rem;">How do I improve detection results?</h4>
+                    <p style="color: #666; font-size: 0.95rem;">For best results, use clear photos in natural daylight, focus on affected areas, and ensure the entire leaf is visible in the image.</p>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <h4 style="color: #333; margin-bottom: 0.5rem;">Is my data private?</h4>
+                    <p style="color: #666; font-size: 0.95rem;">Yes! All your data is encrypted and stored securely. We never share your information with third parties.</p>
+                </div>
+                
+                <div>
+                    <h4 style="color: #333; margin-bottom: 0.5rem;">Can I use the app offline?</h4>
+                    <p style="color: #666; font-size: 0.95rem;">Currently, the app requires an internet connection. We're working on an offline version for future releases.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        async function handleComplaint(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch('/complaint', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        category: document.getElementById('category').value,
+                        subject: document.getElementById('subject').value,
+                        message: document.getElementById('message').value
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('category').value = '';
+                    document.getElementById('subject').value = '';
+                    document.getElementById('message').value = '';
+                    setTimeout(() => {
+                        document.getElementById('successMsg').style.display = 'none';
+                    }, 4000);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to send feedback. Please try again.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

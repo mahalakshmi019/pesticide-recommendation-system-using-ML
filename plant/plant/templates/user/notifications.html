@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications | PlantCare</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/user.css') }}">
+    <style>
+        .notifications-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .notification-item {
+            background: white;
+            border-left: 4px solid #48bb78;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .notification-item.unread {
+            background: #f0f9f7;
+            border-left-color: #48bb78;
+        }
+
+        .notification-item.read {
+            opacity: 0.7;
+            border-left-color: #cbd5e0;
+        }
+
+        .notification-item.alert {
+            border-left-color: #f6ad55;
+        }
+
+        .notification-item.complaint {
+            border-left-color: #9f7aea;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #2c5282;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .notification-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .type-alert {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .type-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .type-info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .notification-message {
+            color: #4a5568;
+            line-height: 1.6;
+            margin: 0.5rem 0;
+        }
+
+        .notification-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .notification-time {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .mark-read-btn {
+            background: none;
+            border: none;
+            color: #48bb78;
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0;
+            transition: color 0.3s ease;
+        }
+
+        .mark-read-btn:hover {
+            color: #38a169;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            color: #cbd5e0;
+            margin-bottom: 1rem;
+        }
+
+        .empty-text {
+            color: #718096;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-subtext {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            color: #4a5568;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            border-color: #48bb78;
+            color: #48bb78;
+            background: #f0f9f7;
+        }
+
+        .unread-badge {
+            display: inline-block;
+            background: #f6ad55;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .mark-all-read {
+            padding: 0.5rem 1rem;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .mark-all-read:hover {
+            background: #38a169;
+        }
+
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .notifications-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c5282;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <i class="fas fa-leaf"></i> PlantCare
+            </a>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/predict" class="nav-link">Predict</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/history" class="nav-link">History</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/alerts" class="nav-link">Alerts</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/notifications" class="nav-link active">
+                        <i class="fas fa-bell"></i> Notifications
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/logout" class="nav-link logout-btn">Logout</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="notifications-container">
+        <div class="notifications-header">
+            <h1 class="notifications-title">
+                <i class="fas fa-bell"></i> Notifications
+            </h1>
+            <button onclick="location.reload()" style="padding: 0.5rem 1rem; background: #48bb78; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Browser Notification Permission Banner -->
+        <div id="notificationBanner" style="background: #e7f3ff; border-left: 4px solid #2c5282; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0 0 0.5rem 0; color: #2c5282;">
+                        <i class="fas fa-bell"></i> Enable Browser Notifications
+                    </h3>
+                    <p style="margin: 0; color: #4a5568; font-size: 0.95rem;">
+                        Turn on browser notifications to receive instant alerts when disease warnings are issued.
+                    </p>
+                </div>
+                <button onclick="requestNotificationPermission()" style="padding: 0.6rem 1.2rem; background: #2c5282; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap;">
+                    Enable Notifications
+                </button>
+                <button onclick="dismissNotificationBanner()" style="background: none; border: none; color: #718096; font-size: 1.2rem; cursor: pointer; margin-left: 0.5rem;">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        {% if notifications %}
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterNotifications('all')">
+                    All
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('alert')">
+                    <i class="fas fa-exclamation-circle"></i> Alerts
+                </button>
+                <button class="filter-btn" onclick="filterNotifications('unread')">
+                    <i class="fas fa-envelope"></i> Unread
+                </button>
+            </div>
+
+            {% set unread_count = notifications | selectattr('is_read', 'equalto', 0) | list | length %}
+            {% if unread_count > 0 %}
+                <button class="mark-all-read" onclick="markAllAsRead()">
+                    Mark All as Read
+                </button>
+            {% endif %}
+
+            {% for notification in notifications %}
+                <div class="notification-item {% if notification.is_read %}read{% else %}unread{% endif %} notification-{{ notification.type }}" 
+                     data-type="{{ notification.type }}" 
+                     data-id="{{ notification.id }}"
+                     onclick="markAsRead({{ notification.id }})">
+                    
+                    <div class="notification-header">
+                        <div class="notification-title">
+                            {% if notification.type == 'alert' %}
+                                <i class="fas fa-exclamation-circle" style="color: #f6ad55;"></i>
+                                {{ notification.title }}
+                            {% elif notification.type == 'complaint' %}
+                                <i class="fas fa-paper-plane" style="color: #9f7aea;"></i>
+                                {{ notification.title }}
+                            {% else %}
+                                <i class="fas fa-info-circle" style="color: #48bb78;"></i>
+                                {{ notification.title }}
+                            {% endif %}
+                        </div>
+                        {% if not notification.is_read %}
+                            <span class="unread-badge">●</span>
+                        {% endif %}
+                    </div>
+
+                    <p class="notification-message">
+                        {{ notification.message }}
+                    </p>
+
+                    <div class="notification-footer">
+                        <div class="notification-time">
+                            <i class="fas fa-clock"></i>
+                            <span>{{ notification.created_at.strftime('%b %d, %Y %I:%M %p') if notification.created_at else 'Recently' }}</span>
+                        </div>
+                        {% if not notification.is_read %}
+                            <button class="mark-read-btn" onclick="event.stopPropagation(); markAsRead({{ notification.id }})">
+                                Mark as read
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <p class="empty-text">No Notifications Yet</p>
+                <p class="empty-subtext">You'll receive notifications here when alerts are sent or system updates occur</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Check if browser supports notifications
+        function checkNotificationSupport() {
+            if ('Notification' in window) {
+                if (Notification.permission === 'default') {
+                    document.getElementById('notificationBanner').style.display = 'block';
+                } else if (Notification.permission === 'granted') {
+                    document.getElementById('notificationBanner').style.display = 'none';
+                }
+            }
+        }
+
+        function dismissNotificationBanner() {
+            document.getElementById('notificationBanner').style.display = 'none';
+            localStorage.setItem('notificationBannerDismissed', 'true');
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        // Save permission
+                        fetch('/api/notifications/permission', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'}
+                        });
+                        
+                        // Show confirmation
+                        alert('Browser notifications enabled! You will now receive alerts.');
+                        dismissNotificationBanner();
+                        
+                        // Test notification
+                        new Notification('PlantCare Notifications Enabled', {
+                            icon: '{{ url_for("static", filename="images/logo.png") }}',
+                            body: 'You will now receive instant alerts for plant disease warnings.',
+                            tag: 'plantcare-notification'
+                        });
+                    } else if (permission === 'denied') {
+                        alert('Notifications disabled. You can enable them in browser settings.');
+                    }
+                });
+            } else {
+                alert('Your browser does not support notifications.');
+            }
+        }
+
+        function filterNotifications(type) {
+            const buttons = document.querySelectorAll('.filter-btn');
+            const notifications = document.querySelectorAll('.notification-item');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            notifications.forEach(notif => {
+                if (type === 'all') {
+                    notif.style.display = 'block';
+                } else if (type === 'unread') {
+                    notif.style.display = notif.classList.contains('unread') ? 'block' : 'none';
+                } else {
+                    notif.style.display = notif.dataset.type === type ? 'block' : 'none';
+                }
+            });
+        }
+
+        function markAsRead(notifId) {
+            fetch(`/api/notification/${notifId}/read`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const elem = document.querySelector(`[data-id="${notifId}"]`);
+                    if (elem) {
+                        elem.classList.remove('unread');
+                        elem.classList.add('read');
+                        const badge = elem.querySelector('.unread-badge');
+                        if (badge) badge.remove();
+                        const btn = elem.querySelector('.mark-read-btn');
+                        if (btn) btn.remove();
+                    }
+                }
+            })
+            .catch(e => console.error('Error:', e));
+        }
+
+        function markAllAsRead() {
+            const unreads = document.querySelectorAll('.notification-item.unread');
+            let count = 0;
+            unreads.forEach(elem => {
+                const id = elem.dataset.id;
+                fetch(`/api/notification/${id}/read`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        elem.classList.remove('unread');
+                        elem.classList.add('read');
+                        const badge = elem.querySelector('.unread-badge');
+                        if (badge) badge.remove();
+                        const btn = elem.querySelector('.mark-read-btn');
+                        if (btn) btn.remove();
+                        count++;
+                    }
+                })
+                .catch(e => console.error('Error:', e));
+            });
+        }
+
+        // Check notification support on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkNotificationSupport();
+            // Check for new notifications every 3 seconds
+            setInterval(checkForNewNotifications, 3000);
+        });
+
+        function checkForNewNotifications() {
+            fetch('/api/notifications/unread')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.count > 0) {
+                        // Show browser notification if permission granted
+                        if (Notification.permission === 'granted') {
+                            new Notification('PlantCare Alert', {
+                                body: 'You have new notifications!',
+                                icon: 'https://via.placeholder.com/64',
+                                tag: 'plantcare-new-notif'
+                            });
+                        }
+                    }
+                })
+                .catch(e => console.log('Notification check failed'));
+        }
+    </script>
+</body>
+</html>

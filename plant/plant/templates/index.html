@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlantGuard - AI Plant Disease Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/user.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .hero {
+            min-height: calc(100vh - 70px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 70px;
+        }
+        
+        .hero-content {
+            max-width: 700px;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        
+        .hero-buttons a {
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid white;
+        }
+        
+        .hero-buttons .primary {
+            background: white;
+            color: var(--primary-color);
+        }
+        
+        .hero-buttons .primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .hero-buttons .secondary {
+            background: transparent;
+            color: white;
+        }
+        
+        .hero-buttons .secondary:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 4rem auto;
+            max-width: 1200px;
+            padding: 0 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .feature-card i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+        
+        .feature-card p {
+            color: var(--text-muted, #718096);
+            font-size: 0.95rem;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .text-muted {
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/" class="navbar-title"><i class="fas fa-leaf"></i> PlantGuard</a>
+            <ul>
+                <li><a href="/login">Login</a></li>
+                <li><a href="/signup">Sign Up</a></li>
+                <li><a href="/admin/login">Admin Portal</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="hero">
+            <div class="hero-content">
+                <h1><i class="fas fa-sprout" style="margin-right: 10px;"></i>PlantGuard</h1>
+                <p>AI-Powered Plant Disease Detection & Alert System</p>
+                <p class="text-muted">Protect your crops with intelligent disease detection technology</p>
+                <div class="hero-buttons">
+                    <a href="/signup" class="primary">Get Started Free</a>
+                    <a href="#features" class="secondary">Learn More</a>
+                </div>
+            </div>
+        </div>
+        
+        <div id="features" class="features">
+            <div class="feature-card">
+                <i class="fas fa-camera"></i>
+                <h3>Smart Detection</h3>
+                <p>Upload plant images and get instant AI-powered disease analysis</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-bell"></i>
+                <h3>Real-time Alerts</h3>
+                <p>Receive notifications about disease outbreaks in your region</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-history"></i>
+                <h3>Track History</h3>
+                <p>Monitor your plant health over time with detailed records</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Secure & Reliable</h3>
+                <p>Your data is encrypted and stored safely on our servers</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-bar"></i>
+                <h3>Analytics</h3>
+                <p>Get insights into disease patterns and prevention strategies</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-headset"></i>
+                <h3>24/7 Support</h3>
+                <p>Contact our support team anytime for help and guidance</p>
+            </div>
+        </div>
+    </main>
+    
+    <footer style="background: #f0f0f0; padding: 2rem; text-align: center; color: #666; margin-top: 4rem;">
+        <p>&copy; 2024 PlantGuard. All rights reserved. | <a href="/complaint">Report Issue</a></p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='notifications.js') }}"></script>
+</body>
+</html>

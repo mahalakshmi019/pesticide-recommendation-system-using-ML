@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts - PlantGuard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/user.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .alerts-container {
+            margin-top: 1.5rem;
+        }
+        
+        .alert-item {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #ddd;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            animation: slideIn 0.4s ease-out;
+        }
+        
+        .alert-item:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+            transform: translateX(2px);
+        }
+        
+        .alert-high {
+            border-left-color: #e53e3e;
+            background: linear-gradient(135deg, rgba(229, 62, 62, 0.05), rgba(255,255,255,0.8));
+        }
+        
+        .alert-medium {
+            border-left-color: #ed8936;
+            background: linear-gradient(135deg, rgba(237, 137, 54, 0.05), rgba(255,255,255,0.8));
+        }
+        
+        .alert-general {
+            border-left-color: #3182ce;
+            background: linear-gradient(135deg, rgba(49, 130, 206, 0.05), rgba(255,255,255,0.8));
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-title {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .alert-title i {
+            font-size: 1.5rem;
+        }
+        
+        .alert-high .alert-title i {
+            color: #e53e3e;
+        }
+        
+        .alert-medium .alert-title i {
+            color: #ed8936;
+        }
+        
+        .alert-general .alert-title i {
+            color: #3182ce;
+        }
+        
+        .priority-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .priority-high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .priority-medium {
+            background: #feebc8;
+            color: #c05621;
+        }
+        
+        .priority-general {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+        
+        .alert-content {
+            color: var(--text-color);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted, #666);
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .alert-region {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .alert-time {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h2 {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            color: #999;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .section-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+        
+        .alert-filter {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/predict" class="navbar-title"><i class="fas fa-leaf"></i> PlantGuard</a>
+            <ul>
+                <li><a href="/predict"><i class="fas fa-camera"></i> Detect</a></li>
+                <li><a href="/history"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="/alerts"><i class="fas fa-bell"></i> Alerts</a></li>
+                <li><a href="/complaint"><i class="fas fa-comment"></i> Support</a></li>
+                <li><a href="/logout" style="color: var(--error-color);"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main class="container">
+        <div class="section-header">
+            <i class="fas fa-bell"></i>
+            <h1>Disease Alerts</h1>
+        </div>
+        
+        {% if alerts %}
+            <div class="alert-filter">
+                <button class="filter-btn active" onclick="filterAlerts('all')">All Alerts</button>
+                <button class="filter-btn" onclick="filterAlerts('high')"><i class="fas fa-exclamation-circle"></i> High Priority</button>
+                <button class="filter-btn" onclick="filterAlerts('medium')"><i class="fas fa-exclamation-triangle"></i> Medium Priority</button>
+            </div>
+            
+            <div class="alerts-container">
+                {% for alert in alerts %}
+                <div class="alert-item alert-{{ alert.priority.lower() }}" data-priority="{{ alert.priority.lower() }}">
+                    <div class="alert-header">
+                        <div class="alert-title">
+                            {% if alert.priority == 'High' %}
+                                <i class="fas fa-exclamation-circle"></i> CRITICAL ALERT
+                            {% elif alert.priority == 'Medium' %}
+                                <i class="fas fa-exclamation-triangle"></i> WARNING
+                            {% else %}
+                                <i class="fas fa-info-circle"></i> Information
+                            {% endif %}
+                        </div>
+                        <span class="priority-badge priority-{{ alert.priority.lower() }}">{{ alert.priority }}</span>
+                    </div>
+                    
+                    <h3 style="color: var(--text-color); margin-bottom: 0.5rem;">{{ alert.disease_name }}</h3>
+                    
+                    <div class="alert-content">
+                        {{ alert.message }}
+                    </div>
+                    
+                    <div class="alert-meta">
+                        <div class="alert-region">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span><strong>Region:</strong> {{ alert.region }}</span>
+                        </div>
+                        <div class="alert-time">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>
+                                {% if alert.created_at %}
+                                    {{ alert.created_at.strftime('%b %d, %Y at %I:%M %p') if alert.created_at.year else 'N/A' }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-bell-slash"></i>
+                <h2>No Active Alerts</h2>
+                <p>You're all caught up! No disease alerts in your region at the moment.</p>
+                <a href="/predict" class="button button-primary"><i class="fas fa-camera"></i> Check Your Plants</a>
+            </div>
+        {% endif %}
+    </main>
+    
+    <script>
+        function filterAlerts(priority) {
+            const alerts = document.querySelectorAll('.alert-item');
+            alerts.forEach(alert => {
+                if (priority === 'all' || alert.dataset.priority === priority) {
+                    alert.style.display = 'block';
+                } else {
+                    alert.style.display = 'none';
+                }
+            });
+            
+            // Update filter button active state
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

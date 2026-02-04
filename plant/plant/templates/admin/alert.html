@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Alerts - PlantGuard Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            height: fit-content;
+        }
+
+        .form-title {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(24, 90, 157, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(24, 90, 157, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alerts-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .alerts-header {
+            padding: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .alerts-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .alert-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            border-left: 5px solid #ddd;
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert-item:hover {
+            background: #f8f9fa;
+        }
+
+        .alert-high {
+            border-left-color: var(--danger-color);
+        }
+
+        .alert-medium {
+            border-left-color: var(--warning-color);
+        }
+
+        .alert-general {
+            border-left-color: var(--info-color);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.8rem;
+        }
+
+        .alert-priority {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .priority-high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .priority-medium {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .priority-general {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .alert-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-details {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 0.8rem;
+        }
+
+        .alert-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted, #999);
+            padding-top: 0.8rem;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted, #666);
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card {
+                height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/admin/dashboard" class="navbar-title"><i class="fas fa-shield-alt"></i> Admin Panel</a>
+            <ul>
+                <li><a href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="/admin/history"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="/admin/alerts"><i class="fas fa-bell"></i> Alerts</a></li>
+                <li><a href="/logout" style="color: var(--error-color);"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div style="margin-bottom: 2rem;">
+            <h1 style="color: var(--primary-color); font-size: 2rem; margin-bottom: 0.5rem;">
+                <i class="fas fa-bell"></i> Alert Management
+            </h1>
+            <p style="color: var(--text-muted, #666); margin: 0;">Send alerts to users about disease outbreaks</p>
+        </div>
+
+        <div class="grid-layout">
+            <div class="form-card">
+                <!-- Tabs for switching modes -->
+                <div
+                    style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+                    <button type="button" onclick="switchMode('alert')" id="tab-alert"
+                        style="background: none; border: none; font-weight: bold; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem; cursor: pointer;">
+                        Send Alert
+                    </button>
+                    <button type="button" onclick="switchMode('broadcast')" id="tab-broadcast"
+                        style="background: none; border: none; font-weight: bold; color: #999; border-bottom: 2px solid transparent; padding-bottom: 0.5rem; cursor: pointer;">
+                        Broadcast Awareness
+                    </button>
+                </div>
+
+                <div class="form-title" id="form-title-text">
+                    <i class="fas fa-paper-plane"></i> Send New Alert
+                </div>
+
+                <div id="successMsg"
+                    style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: none; border-left: 4px solid #155724;">
+                    <i class="fas fa-check-circle"></i> Sent successfully!
+                </div>
+
+                <!-- ALERT FORM -->
+                <form id="alertForm" onsubmit="sendAlert(event)">
+                    <div class="form-group">
+                        <label for="target_users"><i class="fas fa-users"></i> Target Recipient</label>
+                        <select id="target_users" required>
+                            <option value="all" selected>All Users</option>
+                            {% for u in users %}
+                            <option value="{{ u.email }}">{{ u.fullname }} ({{ u.email }})</option>
+                            {% endfor %}
+                        </select>
+                        <small style="color: #666; font-size: 0.8rem;">Select 'All Users' or a specific registered
+                            user.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority"><i class="fas fa-exclamation-circle"></i> Priority Level</label>
+                        <select id="priority" required>
+                            <option value="" disabled selected>Select Priority</option>
+                            <option value="High">High - Critical</option>
+                            <option value="Medium">Medium - Warning</option>
+                            <option value="General">General - Info</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="disease"><i class="fas fa-bug"></i> Disease Name</label>
+                        <input type="text" id="disease" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="region"><i class="fas fa-map-marker-alt"></i> Region/Area</label>
+                        <input type="text" id="region" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message"><i class="fas fa-message"></i> Message</label>
+                        <textarea id="message" required></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> Send Alert
+                    </button>
+                </form>
+
+                <!-- BROADCAST FORM (Hidden by default) -->
+                <form id="broadcastForm" onsubmit="sendBroadcast(event)" style="display: none;">
+                    <div class="form-group">
+                        <label for="bc_subject"><i class="fas fa-heading"></i> Subject</label>
+                        <input type="text" id="bc_subject" required placeholder="e.g. Seasonal Disease Awareness">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bc_content"><i class="fas fa-file-alt"></i> Content / Tips</label>
+                        <textarea id="bc_content" required placeholder="Enter the awareness message here..."
+                            style="min-height: 150px;"></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="bcSubmitBtn"
+                        style="background: linear-gradient(135deg, #8e44ad, #9b59b6);">
+                        <i class="fas fa-bullhorn"></i> Send Broadcast
+                    </button>
+                </form>
+            </div>
+
+            <div class="alerts-list">
+                <div class="alerts-header">
+                    <h2><i class="fas fa-list"></i> Recent Alerts</h2>
+                </div>
+
+                {% if alert_history %}
+                <div style="max-height: 600px; overflow-y: auto;">
+                    {% for a in alert_history %}
+                    <div class="alert-item alert-{{ a.priority.lower() }}">
+                        <div class="alert-header">
+                            <div>
+                                <div class="alert-title">
+                                    {% if a.priority == 'High' %}
+                                    <i class="fas fa-exclamation-circle" style="color: var(--danger-color);"></i>
+                                    {% elif a.priority == 'Medium' %}
+                                    <i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i>
+                                    {% else %}
+                                    <i class="fas fa-info-circle" style="color: var(--info-color);"></i>
+                                    {% endif %}
+                                    {{ a.disease_name }}
+                                </div>
+                            </div>
+                            <span class="alert-priority priority-{{ a.priority.lower() }}">{{ a.priority }}</span>
+                        </div>
+
+                        <div class="alert-details">
+                            {{ a.message }}
+                        </div>
+
+                        <div class="alert-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> {{ a.region }}</span>
+                            <span><i class="fas fa-calendar-alt"></i>
+                                {% if a.created_at %}
+                                {{ a.created_at.strftime('%b %d, %I:%M %p') if a.created_at.year else 'N/A' }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-bell-slash"></i>
+                    <h3>No Alerts Sent</h3>
+                    <p>No alerts have been sent yet. Create your first alert using the form on the left.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function switchMode(mode) {
+            const alertForm = document.getElementById('alertForm');
+            const broadcastForm = document.getElementById('broadcastForm');
+            const tabAlert = document.getElementById('tab-alert');
+            const tabBroadcast = document.getElementById('tab-broadcast');
+            const title = document.getElementById('form-title-text');
+
+            if (mode === 'alert') {
+                alertForm.style.display = 'block';
+                broadcastForm.style.display = 'none';
+                title.innerHTML = '<i class="fas fa-paper-plane"></i> Send New Alert';
+
+                tabAlert.style.color = 'var(--primary-color)';
+                tabAlert.style.borderBottomColor = 'var(--primary-color)';
+                tabBroadcast.style.color = '#999';
+                tabBroadcast.style.borderBottomColor = 'transparent';
+            } else {
+                alertForm.style.display = 'none';
+                broadcastForm.style.display = 'block';
+                title.innerHTML = '<i class="fas fa-bullhorn"></i> Broadcast Awareness';
+
+                tabBroadcast.style.color = '#8e44ad';
+                tabBroadcast.style.borderBottomColor = '#8e44ad';
+                tabAlert.style.color = '#999';
+                tabAlert.style.borderBottomColor = 'transparent';
+            }
+        }
+
+        async function sendBroadcast(e) {
+            e.preventDefault();
+            const btn = document.getElementById('bcSubmitBtn');
+            const subject = document.getElementById('bc_subject').value;
+            const content = document.getElementById('bc_content').value;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/admin/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject, content })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('successMsg').innerHTML = '<i class="fas fa-check-circle"></i> Broadcast sent successfully!';
+                    document.getElementById('bc_subject').value = '';
+                    document.getElementById('bc_content').value = '';
+                    setTimeout(() => { document.getElementById('successMsg').style.display = 'none'; }, 3000);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed. Try again.');
+            } finally {
+                btn.innerHTML = '<i class="fas fa-bullhorn"></i> Send Broadcast';
+                btn.disabled = false;
+            }
+        }
+
+
+
+        async function sendAlert(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const priority = document.getElementById('priority').value;
+            const disease = document.getElementById('disease').value;
+            const region = document.getElementById('region').value;
+            const message = document.getElementById('message').value;
+            // NEW: Get target users
+            const target_users = document.getElementById('target_users').value || 'all';
+
+            if (!priority) {
+                alert('Please select a priority level');
+                return;
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/admin/send_alert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ priority, disease, region, message, target_users })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('priority').value = '';
+                    document.getElementById('disease').value = '';
+                    document.getElementById('region').value = '';
+                    document.getElementById('message').value = '';
+                    document.getElementById('target_users').value = '';
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to send alert. Please try again.');
+            } finally {
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Alert';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>
